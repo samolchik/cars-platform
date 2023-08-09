@@ -8,17 +8,18 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from "@nestjs/swagger";
 import { CarService } from './car.service';
-import { CreateCarRequestDto } from "./models/dtos/request/create-car.request.dto";
-import { UpdateCarRequestDto } from "./models/dtos/request/update-car.request.dto";
-
+import { CreateCarRequestDto } from './models/dtos/request/create-car.request.dto';
+import { UpdateCarRequestDto } from './models/dtos/request/update-car.request.dto';
+import { Car } from './car.entity';
 
 @ApiTags('Cars')
 @Controller('cars')
 export class CarController {
   constructor(private readonly carService: CarService) {}
 
+  @ApiOperation({ summary: 'Create new car' })
   @Post(':userId')
   async createCar(
     @Body() body: CreateCarRequestDto,

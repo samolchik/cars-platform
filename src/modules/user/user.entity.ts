@@ -1,5 +1,6 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
 import { AccountType, UserRole } from './models/enums';
+import { Car } from '../car/car.entity';
 
 @Entity()
 export class User {
@@ -18,7 +19,7 @@ export class User {
   @Column({ type: 'boolean', default: false })
   banned: boolean;
 
-  @Column({ type: 'varchar', nullable: false })
+  @Column({ type: 'varchar' })
   banReason: string;
 
   @Column({
@@ -34,4 +35,7 @@ export class User {
     default: AccountType.BASIC,
   })
   accountType: AccountType;
+
+  @OneToMany(() => Car, (entity) => entity.user, { cascade: true })
+  cars: Car[];
 }

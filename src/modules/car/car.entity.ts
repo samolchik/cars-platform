@@ -2,6 +2,7 @@ import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
 import { BodyTypeEnum } from "./models/enums/body-type.enum";
 import { StatusCarEnum } from "./models/enums/status.enum";
 import { CurrencyEnum } from "./models/enums/currency.enum";
+import { User } from "../user/user.entity";
 
 @Entity()
 export class Car {
@@ -36,6 +37,6 @@ export class Car {
   })
   currency: CurrencyEnum;
 
-  // @ManyToOne(() => User, (entity) => entity.cars)
-  // user: User;
+  @ManyToOne(() => User, (entity) => entity.cars)
+  user: User;
 }

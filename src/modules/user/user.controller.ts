@@ -41,7 +41,7 @@ export class UserController {
 
   @ApiOperation({ summary: 'Get all users' })
   @ApiBearerAuth()
-  @UseGuards(AuthGuard())
+  // @UseGuards(AuthGuard())
   @ApiPaginatedResponse('entities', PublicUserData)
   @ApiResponse({
     status: HttpStatus.OK,
@@ -53,17 +53,17 @@ export class UserController {
     return await this.userService.getAllUsers(query);
   }
 
-  // @ApiOperation({ summary: 'Get user by id' })
-  // @ApiResponse({
-  //   status: HttpStatus.OK,
-  //   description: 'Get user by ID',
-  //   type: PublicUserData,
-  // })
-  // @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'User not found' })
-  // @Get(':userId')
-  // async getUserById(@Param('userId') userId: string) {
-  //   return await this.userService.getUserById(userId);
-  // }
+  @ApiOperation({ summary: 'Get user by id' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Get user by ID',
+    type: PublicUserData,
+  })
+  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'User not found' })
+  @Get(':userId')
+  async getUserById(@Param('userId') userId: string) {
+    return await this.userService.getUserById(userId);
+  }
 
   @ApiOperation({ summary: 'Login user' })
   @Post('login')

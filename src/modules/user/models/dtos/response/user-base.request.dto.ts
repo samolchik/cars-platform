@@ -1,12 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
   IsBoolean,
+  IsEnum,
   IsNotEmpty,
-  IsNumber,
   IsOptional,
   IsString,
   Matches,
 } from 'class-validator';
+import { AccountType, UserRole } from '../../enums';
 
 export class UserBaseRequestDto {
   @ApiProperty({
@@ -19,15 +20,32 @@ export class UserBaseRequestDto {
   @IsNotEmpty()
   name: string;
 
-  @ApiProperty({ title: 'Age', minLength: 1, maxLength: 99 })
-  @IsNumber()
-  @IsOptional()
-  age: number;
+  @IsEnum(UserRole)
+  @IsNotEmpty()
+  role: UserRole;
+
+  @IsEnum(AccountType)
+  @IsNotEmpty()
+  accountType: AccountType;
 
   @ApiProperty({ title: 'Is active', readOnly: true })
   @IsBoolean()
   @IsOptional()
   isActive: boolean;
+
+  @ApiProperty({ title: 'Is banned', readOnly: true })
+  @IsBoolean()
+  @IsOptional()
+  banned: boolean;
+
+  @ApiProperty({
+    title: 'Ban reason',
+    pattern: '^[a-zA-Z]\\w{1,19}$',
+    minLength: 1,
+    maxLength: 100,
+  })
+  @IsString()
+  banReason: string;
 
   @ApiProperty({
     title: 'Password',

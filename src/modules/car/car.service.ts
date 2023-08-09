@@ -23,7 +23,7 @@ export class CarService {
       throw new HttpException('User not found', HttpStatus.NOT_FOUND);
     }
 
-    const newCar = this.carRepository.create({ ...data});
+    const newCar = this.carRepository.create({ ...data, user});
 
     return await this.carRepository.save(newCar);
   }

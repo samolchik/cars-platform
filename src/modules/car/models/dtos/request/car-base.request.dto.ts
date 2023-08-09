@@ -6,10 +6,9 @@ import {
   Max,
   Min,
 } from 'class-validator';
-import { StatusCarEnum } from "../../enums/status.enum";
-import { CurrencyEnum } from "../../enums/currency.enum";
-import { BodyTypeEnum } from "../../enums/body-type.enum";
-
+import { StatusCarEnum } from '../../enums/status.enum';
+import { CurrencyEnum } from '../../enums/currency.enum';
+import { BodyTypeEnum } from '../../enums/body-type.enum';
 
 export class CarBaseRequestDto {
   @IsString()

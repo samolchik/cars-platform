@@ -4,7 +4,7 @@ import { UserBaseRequestDto } from './user-base.request.dto';
 
 export class CreateUserRequestDto extends PickType(UserBaseRequestDto, [
   'name',
-  'isActive',
   'password',
   'email',
+  'role',
 ]) {}

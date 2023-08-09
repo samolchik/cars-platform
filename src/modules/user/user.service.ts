@@ -15,7 +15,6 @@ import { UserRepository } from './user.repository';
 export class UserService {
   constructor(
     private readonly userRepository: UserRepository,
-    private readonly authService: AuthService,
     @InjectRedisClient() readonly redisClient: RedisClient,
   ) {}
 
@@ -39,8 +38,10 @@ export class UserService {
       );
     }
 
-    if (await this.compareHash(data.password, findUser.password)) {
-      const token = await this.signIn(findUser);
+    if (
+      await this.userRepository.compareHash(data.password, findUser.password)
+    ) {
+      const token = await this.userRepository.signIn(findUser);
       this.redisClient.setEx(token, 10000, token);
 
       return { token };
@@ -51,18 +52,18 @@ export class UserService {
     );
   }
 
-  // async getUserById(userId: string): Promise<PublicUserData> {
-  //   const findUser = await this.userRepository.findOne({
-  //     where: { id: +userId },
-  //     relations: { cars: true },
-  //   });
-  //
-  //   if (!findUser) {
-  //     throw new HttpException('User not found', HttpStatus.NOT_FOUND);
-  //   }
-  //
-  //   return findUser;
-  // }
+  async getUserById(userId: string): Promise<PublicUserData> {
+    const findUser = await this.userRepository.findOne({
+      where: { id: +userId },
+      relations: { cars: true },
+    });
+
+    if (!findUser) {
+      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+    }
+
+    return findUser;
+  }
 
   async createUser(data: CreateUserRequestDto) {
     const findUser = await this.userRepository.findOne({
@@ -78,12 +79,12 @@ export class UserService {
       );
     }
 
-    data.password = await this.getHash(data.password);
+    data.password = await this.userRepository.getHash(data.password);
 
     const newUser = this.userRepository.create(data);
     await this.userRepository.save(newUser);
 
-    const token = await this.signIn(newUser);
+    const token = await this.userRepository.signIn(newUser);
 
     return { token };
   }
@@ -112,19 +113,5 @@ export class UserService {
     }
 
     await this.userRepository.remove(user);
-  }
-
-  async getHash(password: string) {
-    return await bcrypt.hash(password, 7);
-  }
-
-  async signIn(user) {
-    return await this.authService.signIn({
-      id: user.id.toString(),
-    });
-  }
-
-  async compareHash(password: string, hash: string): Promise<boolean> {
-    return bcrypt.compare(password, hash);
   }
 }
