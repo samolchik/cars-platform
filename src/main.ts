@@ -16,7 +16,7 @@ async function start() {
       'This is a REST API for a platform that allows users to buy and sell cars.',
     )
     .setVersion('1.0')
-    .addTag('cars')
+    .addTag('Cars')
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document, {
