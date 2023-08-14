@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TypeOrmConfiguration } from './config';
-import { UserModule } from './modules/user/user.module';
+import { UserModule } from './modules/users/user.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { CarModule } from './modules/cars/car.module';
 import { RoleModule } from './modules/roles/role.module';

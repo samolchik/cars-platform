@@ -2,12 +2,12 @@ import { forwardRef, Module } from "@nestjs/common";
 import { AuthService } from './auth.service';
 import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { User } from '../user/user.entity';
+import { User } from '../users/user.entity';
 import { BearerStrategy } from './bearer.strategy';
 import { JwtModule } from '@nestjs/jwt';
 import { RedisModule } from '@webeleon/nestjs-redis';
 import { RoleModule } from '../roles/role.module';
-import { UserModule } from '../user/user.module';
+import { UserModule } from '../users/user.module';
 import { Role } from '../roles/role.entity';
 import { AuthController } from './auth.controller';
 @Module({

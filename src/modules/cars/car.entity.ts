@@ -9,7 +9,7 @@ import {
 import { BodyTypeEnum } from './models/enums/body-type.enum';
 import { StatusCarEnum } from './models/enums/status.enum';
 import { CurrencyEnum } from './models/enums/currency.enum';
-import { User } from '../user/user.entity';
+import { User } from '../users/user.entity';
 import { IsString, Min } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 

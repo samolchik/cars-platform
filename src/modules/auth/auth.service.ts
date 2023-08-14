@@ -6,15 +6,15 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { JwtService } from '@nestjs/jwt';
-import { User } from '../user/user.entity';
+import { User } from '../users/user.entity';
 import { Repository } from 'typeorm';
 import { JWTPayload } from './models/interfaces/auth.interface';
 import { RoleService } from '../roles/role.service';
 import { InjectRedisClient, RedisClient } from '@webeleon/nestjs-redis';
-import { CreateUserRequestDto } from '../user/models/dtos/request/create-user.request.dto';
+import { CreateUserRequestDto } from '../users/models/dtos/request/create-user.request.dto';
 import { LoginResponseDto } from './models/dtos/response/login.response.dto';
-import { UserLoginDto } from '../user/models/dtos/request/user.login.dto';
-import { UserService } from '../user/user.service';
+import { UserLoginDto } from '../users/models/dtos/request/user.login.dto';
+import { UserService } from '../users/user.service';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()

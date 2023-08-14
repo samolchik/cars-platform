@@ -11,8 +11,8 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { LoginResponseDto } from './models/dtos/response/login.response.dto';
 import { LocalAuthGuard } from './models/guards/local-auth.guard';
-import { CreateUserRequestDto } from '../user/models/dtos/request/create-user.request.dto';
-import { UserLoginDto } from '../user/models/dtos/request/user.login.dto';
+import { CreateUserRequestDto } from '../users/models/dtos/request/create-user.request.dto';
+import { UserLoginDto } from '../users/models/dtos/request/user.login.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { LogoutGuard } from '../../common/guards/logout.guard';
 
