@@ -50,7 +50,7 @@ export class UserService {
       );
     }
 
-    const role = await this.roleService.getRoleByValue('ADMIN');
+    const role = await this.roleService.getRoleByValue('MANAGER');
 
     const createdUser = this.userRepository.create({
       ...data,

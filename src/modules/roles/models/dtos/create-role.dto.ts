@@ -8,7 +8,7 @@ export class CreateRoleDto {
   })
   @IsString()
   @IsNotEmpty()
-  value: string;
+  role: string;
 
   @ApiProperty({
     example: 'Administrator role',
@@ -18,4 +18,3 @@ export class CreateRoleDto {
   @IsNotEmpty()
   description: string;
 }
-

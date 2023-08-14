@@ -10,15 +10,18 @@ import { Role } from '../roles/role.entity';
 import { RoleModule } from '../roles/role.module';
 import { Car } from '../cars/car.entity';
 import { CarModule } from '../cars/car.module';
+import { Post } from "../posts/post.entity";
+import { PostModule } from "../posts/post.module";
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, Role, Car]),
+    TypeOrmModule.forFeature([User, Role, Car, Post]),
     RedisModule.forRoot({
       url: process.env.REDIS_PORT,
     }),
     RoleModule,
     CarModule,
+    PostModule,
     forwardRef(() => AuthModule),
   ],
   providers: [UserService, UserRepository],

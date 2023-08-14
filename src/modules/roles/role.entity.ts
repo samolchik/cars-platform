@@ -14,19 +14,12 @@ export class Role {
   id: number;
 
   @ApiProperty({ example: 'ADMIN', description: 'Unique role meaning' })
-  // @Column({
-  //   type: 'enum',
-  //   unique: true,
-  //   nullable: false,
-  //   enum: UserRoleEnum,
-  // })
-  // role: UserRoleEnum;
   @Column({
     type: 'varchar',
     unique: true,
     nullable: false,
   })
-  value: string;
+  role: string;
 
   @ApiProperty({ example: 'Administrator', description: 'Role description' })
   @Column({ type: 'varchar', nullable: false })

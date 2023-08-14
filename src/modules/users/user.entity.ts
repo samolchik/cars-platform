@@ -11,6 +11,7 @@ import {
 import { AccountType } from './models/enums';
 import { Car } from '../cars/car.entity';
 import { Role } from '../roles/role.entity';
+import { Post } from "../posts/post.entity";
 
 @Entity()
 export class User {
@@ -65,6 +66,14 @@ export class User {
   })
   @OneToMany(() => Car, (entity) => entity.user, { cascade: true })
   cars: Car[];
+
+  @ApiProperty({
+    type: Post,
+    isArray: true,
+    description: 'List of user cars',
+  })
+  @OneToMany(() => Post, (entity) => entity.author, { cascade: true })
+  posts: Post[];
 
   @ApiProperty({
     type: Role,

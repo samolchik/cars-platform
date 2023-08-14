@@ -57,6 +57,8 @@ export class UserController {
   }
 
   @ApiBearerAuth()
+  @Roles('ADMIN')
+  @UseGuards(RolesGuard)
   @ApiOperation({ summary: 'Create new user' })
   @ApiResponse({
     status: HttpStatus.CREATED,

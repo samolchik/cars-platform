@@ -39,10 +39,20 @@ export class AuthService {
     }
 
     const hashPassword = await this.getHash(data.password);
-    const newUser = await this.userService.createUser({
+
+    const role = await this.roleService.getRoleByValue('MANAGER');
+
+    const createdUser = this.userRepository.create({
       ...data,
       password: hashPassword,
+      roles: [role],
     });
+
+    const newUser = await this.userRepository.save(createdUser)
+    // const newUser = await this.userService.createUser({
+    //   ...data,
+    //   password: hashPassword,
+    // });
 
     const tokenResponse = await this.generateToken(newUser);
     const token = tokenResponse.token;
