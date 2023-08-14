@@ -2,16 +2,16 @@ import { applyDecorators, Type } from '@nestjs/common';
 import { ApiOkResponse, ApiProperty, getSchemaPath } from '@nestjs/swagger';
 
 export class PaginatedDto<TModel> {
-  @ApiProperty()
+  @ApiProperty({ example: 1, description: 'Page number' })
   page: number;
 
-  @ApiProperty()
+  @ApiProperty({ example: 10, description: 'Total number of pages' })
   pages: number;
 
-  @ApiProperty()
+  @ApiProperty({ example: 25, description: 'Total number of items' })
   countItem: number;
 
-  @ApiProperty()
+  @ApiProperty({ type: [Object], description: 'List of entities' })
   entities: TModel[];
 }
 

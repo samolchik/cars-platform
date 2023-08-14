@@ -1,20 +1,23 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import * as bcrypt from 'bcrypt';
-import { AuthService } from '../auth/auth.service';
 import { InjectRedisClient, RedisClient } from '@webeleon/nestjs-redis';
 import { PublicUserInfoDto } from '../../common/query/user.query.dto';
 import { PaginatedDto } from '../../common/pagination/response';
 import { PublicUserData } from './models/interface/user.response.dto';
-import { UserLoginDto } from './models/dtos/response/user.login.dto';
-import { CreateUserRequestDto } from './models/dtos/response/create-user.request.dto';
-import { UpdateUserRequestDto } from './models/dtos/response/update-user.request.dto';
+import { CreateUserRequestDto } from './models/dtos/request/create-user.request.dto';
+import { UpdateUserRequestDto } from './models/dtos/request/update-user.request.dto';
 import { User } from './user.entity';
 import { UserRepository } from './user.repository';
+import { RoleService } from '../roles/role.service';
+import { AddRoleDto } from './models/dtos/request/add-role.dto';
+import { BanUserDto } from './models/dtos/request/ban-user.dto';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService {
   constructor(
     private readonly userRepository: UserRepository,
+    private readonly roleService: RoleService,
+    // private readonly jwtService: JwtService,
     @InjectRedisClient() readonly redisClient: RedisClient,
   ) {}
 
@@ -24,38 +27,10 @@ export class UserService {
     return await this.userRepository.getAllUsers(query);
   }
 
-  async login(data: UserLoginDto) {
-    const findUser = await this.userRepository.findOne({
-      where: {
-        email: data.email,
-      },
-    });
-
-    if (!findUser) {
-      throw new HttpException(
-        `Email or password is not correct`,
-        HttpStatus.UNAUTHORIZED,
-      );
-    }
-
-    if (
-      await this.userRepository.compareHash(data.password, findUser.password)
-    ) {
-      const token = await this.userRepository.signIn(findUser);
-      this.redisClient.setEx(token, 10000, token);
-
-      return { token };
-    }
-    throw new HttpException(
-      `Email or password is not correct`,
-      HttpStatus.UNAUTHORIZED,
-    );
-  }
-
   async getUserById(userId: string): Promise<PublicUserData> {
     const findUser = await this.userRepository.findOne({
       where: { id: +userId },
-      relations: { cars: true },
+      relations: { cars: true, roles: true },
     });
 
     if (!findUser) {
@@ -65,42 +40,49 @@ export class UserService {
     return findUser;
   }
 
-  async createUser(data: CreateUserRequestDto) {
-    const findUser = await this.userRepository.findOne({
-      where: {
-        email: data.email,
-      },
-    });
+  async createUser(data: CreateUserRequestDto): Promise<User> {
+    const user = await this.findUser(data);
 
-    if (findUser) {
+    if (user) {
       throw new HttpException(
-        `User with this ${data.email} already exists!`,
+        `User with email ${data.email} already exists`,
         HttpStatus.BAD_REQUEST,
       );
     }
 
-    data.password = await this.userRepository.getHash(data.password);
+    const role = await this.roleService.getRoleByValue('ADMIN');
 
-    const newUser = this.userRepository.create(data);
-    await this.userRepository.save(newUser);
+    const createdUser = this.userRepository.create({
+      ...data,
+      roles: [role],
+    });
 
-    const token = await this.userRepository.signIn(newUser);
-
-    return { token };
+    return await this.userRepository.save(createdUser);
   }
 
   async updateUserById(
     userId: string,
     data: UpdateUserRequestDto,
   ): Promise<User> {
-    await this.userRepository.update(
-      { id: +userId },
-      {
-        name: data.name,
-        email: data.email,
-      },
-    );
-    return await this.userRepository.save(data);
+    const user = await this.userRepository.findOne({ where: { id: +userId } });
+
+    if (!user) {
+      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+    }
+
+    if (data.name) {
+      user.name = data.name;
+    }
+
+    if (data.email) {
+      user.email = data.email;
+    }
+
+    if (data.password) {
+      user.password = await bcrypt.hash(data.password, 10);
+    }
+
+    return await this.userRepository.save(user);
   }
 
   async deleteUser(userId: string): Promise<void> {
@@ -113,5 +95,42 @@ export class UserService {
     }
 
     await this.userRepository.remove(user);
+  }
+
+  async addRole(data: AddRoleDto) {
+    const user = await this.userRepository.findOne({
+      where: { id: +data.userId },
+      relations: ['roles'],
+    });
+    const role = await this.roleService.getRoleByValue(data.value);
+
+    if (role && user) {
+      user.roles.push(role);
+      await this.userRepository.save(user);
+      return data;
+    }
+    throw new HttpException('User or role not found', HttpStatus.NOT_FOUND);
+  }
+
+  async ban(data: BanUserDto) {
+    const user = await this.userRepository.findOne({
+      where: { id: +data.userId },
+    });
+    if (!user) {
+      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+    }
+    user.banned = true;
+    user.banReason = data.banReason;
+    await this.userRepository.save(user);
+    return user;
+  }
+
+  async findUser(data) {
+    return await this.userRepository.findOne({
+      where: {
+        email: data.email,
+      },
+      relations: { roles: true, cars: true },
+    });
   }
 }

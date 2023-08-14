@@ -19,7 +19,7 @@ async function start() {
     .addTag('Cars')
     .build();
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document, {
+  SwaggerModule.setup('/api/docs', app, document, {
     swaggerOptions: {
       docExpansion: 'list',
       defaultModelExpandDepth: 1,

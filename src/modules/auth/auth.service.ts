@@ -1,33 +1,93 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '../user/user.entity';
 import { Repository } from 'typeorm';
 import { JWTPayload } from './models/interfaces/auth.interface';
+import { RoleService } from '../roles/role.service';
+import { InjectRedisClient, RedisClient } from '@webeleon/nestjs-redis';
+import { CreateUserRequestDto } from '../user/models/dtos/request/create-user.request.dto';
+import { LoginResponseDto } from './models/dtos/response/login.response.dto';
+import { UserLoginDto } from '../user/models/dtos/request/user.login.dto';
+import { UserService } from '../user/user.service';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly jwtService: JwtService,
+    public readonly userService: UserService,
     @InjectRepository(User)
     public readonly userRepository: Repository<User>,
+    public readonly roleService: RoleService,
+    @InjectRedisClient() readonly redisClient: RedisClient,
   ) {}
 
-  async signIn(data: JWTPayload): Promise<string> {
-    return this.jwtService.sign(data);
-  }
+  async register(data: CreateUserRequestDto): Promise<LoginResponseDto> {
+    const findUser = await this.userService.findUser(data);
 
-  async validateUser(data: JWTPayload): Promise<User> {
-    const user = await this.userRepository.findOne({
-      where: {
-        id: +data.id,
-      },
-    });
-    if (!user) {
-      throw new UnauthorizedException();
+    if (findUser) {
+      throw new HttpException(
+        `User with this email ${data.email} already exists!`,
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
-    return user;
+    const hashPassword = await this.getHash(data.password);
+    const newUser = await this.userService.createUser({
+      ...data,
+      password: hashPassword,
+    });
+
+    const tokenResponse = await this.generateToken(newUser);
+    const token = tokenResponse.token;
+    this.redisClient.setEx(token, 10000, token);
+
+    return { token };
+  }
+
+  async login(data: UserLoginDto): Promise<LoginResponseDto> {
+    const findUser = await this.userService.findUser(data);
+
+    if (!findUser) {
+      throw new HttpException(
+        `Email or password is not correct`,
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+
+    const passwordEquals = await bcrypt.compare(
+      data.password,
+      findUser.password,
+    );
+
+    if (passwordEquals) {
+      const tokenResponse = await this.generateToken(findUser);
+      const token = tokenResponse.token;
+
+      this.redisClient.setEx(token, 10000, token);
+      return { token };
+    }
+    throw new HttpException(
+      `Email or password is not correct!`,
+      HttpStatus.UNAUTHORIZED,
+    );
+  }
+
+  async generateToken(data: User): Promise<LoginResponseDto> {
+    const payload = { email: data.email, id: data.id, roles: data.roles };
+    return {
+      token: this.jwtService.sign(payload),
+    };
+  }
+
+  async getHash(password: string) {
+    return await bcrypt.hash(password, 10);
   }
 
   async verify(token: string): Promise<JWTPayload> {
@@ -39,9 +99,9 @@ export class AuthService {
     }
   }
 
-  decode(token: string): JWTPayload | any {
+  async decode(token: string): Promise<JWTPayload | any> {
     try {
-      return this.jwtService.decode(token);
+      return await this.jwtService.decode(token);
     } catch (e) {
       console.log(
         new Date().toISOString(),

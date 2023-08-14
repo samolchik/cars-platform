@@ -9,7 +9,6 @@ import {
   Post,
   Query,
   Req,
-  Res,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -28,10 +27,13 @@ import {
 } from '../../common/pagination/response';
 import { PublicUserData } from './models/interface/user.response.dto';
 import { PublicUserInfoDto } from '../../common/query/user.query.dto';
-import { UserLoginDto } from './models/dtos/response/user.login.dto';
-import { LogoutGuard } from '../../common/guards/logout.guard';
-import { CreateUserRequestDto } from './models/dtos/response/create-user.request.dto';
-import { UpdateUserRequestDto } from './models/dtos/response/update-user.request.dto';
+import { CreateUserRequestDto } from './models/dtos/request/create-user.request.dto';
+import { UpdateUserRequestDto } from './models/dtos/request/update-user.request.dto';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { AddRoleDto } from './models/dtos/request/add-role.dto';
+import { BanUserDto } from './models/dtos/request/ban-user.dto';
+import { User } from './user.entity';
 
 @ApiTags('Users')
 @ApiExtraModels(PublicUserData, PaginatedDto)
@@ -41,11 +43,12 @@ export class UserController {
 
   @ApiOperation({ summary: 'Get all users' })
   @ApiBearerAuth()
-  // @UseGuards(AuthGuard())
+  @Roles('ADMIN')
+  @UseGuards(RolesGuard)
   @ApiPaginatedResponse('entities', PublicUserData)
   @ApiResponse({
-    status: HttpStatus.OK,
     description: 'Get all users with pagination',
+    status: HttpStatus.OK,
     type: PaginatedDto,
   })
   @Get('list')
@@ -53,11 +56,24 @@ export class UserController {
     return await this.userService.getAllUsers(query);
   }
 
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Create new user' })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: 'Create new user',
+    type: User,
+  })
+  @Post('create')
+  async createUser(@Req() req: any, @Body() body: CreateUserRequestDto) {
+    return await this.userService.createUser(body);
+  }
+
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Get user by id' })
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Get user by ID',
-    type: PublicUserData,
+    type: User,
   })
   @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'User not found' })
   @Get(':userId')
@@ -65,37 +81,7 @@ export class UserController {
     return await this.userService.getUserById(userId);
   }
 
-  @ApiOperation({ summary: 'Login user' })
-  @Post('login')
-  async login(@Req() req: any, @Body() body: UserLoginDto) {
-    return await this.userService.login(body);
-  }
-
-  @UseGuards(AuthGuard(), LogoutGuard)
-  @Post('logout')
-  async logout(@Res() res: any) {
-    return res.status(HttpStatus.OK).json('User logout');
-  }
-
-  @ApiOperation({ summary: 'Create new user' })
-  @ApiResponse({
-    status: HttpStatus.CREATED,
-    description: 'Create new user',
-  })
-  @ApiResponse({
-    status: HttpStatus.BAD_REQUEST,
-    description: 'User with this email already exists',
-  })
-  @Post('create')
-  async createUser(@Req() req: any, @Body() body: CreateUserRequestDto) {
-    return await this.userService.createUser(body);
-  }
-
-  @Post('create/:userId/car')
-  async addCarToUser() {
-    return 'Add New car to User';
-  }
-
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Update user' })
   @UseGuards(AuthGuard())
   @ApiResponse({
@@ -103,7 +89,6 @@ export class UserController {
     description: 'Update user by ID',
     type: PublicUserData,
   })
-  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'User not found' })
   @Patch(':userId')
   async updateUser(
     @Param('userId') userId: string,
@@ -126,5 +111,23 @@ export class UserController {
       statusCode: HttpStatus.OK,
       message: 'User deleted successfully',
     };
+  }
+
+  @ApiOperation({ summary: 'Add role' })
+  @ApiResponse({ status: 200 })
+  @Roles('ADMIN')
+  @UseGuards(RolesGuard)
+  @Post('/role')
+  addRole(@Body() data: AddRoleDto) {
+    return this.userService.addRole(data);
+  }
+
+  @ApiOperation({ summary: 'Ban user' })
+  @ApiResponse({ status: 200 })
+  @Roles('ADMIN')
+  @UseGuards(RolesGuard)
+  @Post('/ban')
+  ban(@Body() data: BanUserDto) {
+    return this.userService.ban(data);
   }
 }

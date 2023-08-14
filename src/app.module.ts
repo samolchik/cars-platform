@@ -3,7 +3,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { TypeOrmConfiguration } from './config';
 import { UserModule } from './modules/user/user.module';
 import { AuthModule } from './modules/auth/auth.module';
-import { CarModule } from "./modules/car/car.module";
+import { CarModule } from './modules/cars/car.module';
+import { RoleModule } from './modules/roles/role.module';
+import { PostModule } from './modules/posts/post.module';
 
 @Module({
   imports: [
@@ -11,6 +13,8 @@ import { CarModule } from "./modules/car/car.module";
     UserModule,
     AuthModule,
     CarModule,
+    RoleModule,
+    PostModule,
   ],
   controllers: [],
   providers: [],

@@ -6,4 +6,6 @@ export class UpdateCarRequestDto extends PickType(CarBaseRequestDto, [
   'age',
   'price',
   'currency',
+  'mileage',
+  'detailedDescription',
 ]) {}

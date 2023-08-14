@@ -1,17 +1,11 @@
 import { DataSource, Repository } from 'typeorm';
 import { User } from './user.entity';
-import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
+import { Injectable } from '@nestjs/common';
 import { PublicUserInfoDto } from '../../common/query/user.query.dto';
-import * as bcrypt from 'bcrypt';
-import { AuthService } from '../auth/auth.service';
-import { CreateUserRequestDto } from "./models/dtos/response/create-user.request.dto";
 
 @Injectable()
 export class UserRepository extends Repository<User> {
-  constructor(
-    private readonly dataSource: DataSource,
-    private readonly authService: AuthService,
-  ) {
+  constructor(private readonly dataSource: DataSource) {
     super(User, dataSource.manager);
   }
 
@@ -19,18 +13,33 @@ export class UserRepository extends Repository<User> {
     query.order = query.order || 'ASC';
 
     const page = +query.page || 1;
-    const limit = +query.limit || 2;
+    const limit = +query.limit || 4;
     const offset = (page - 1) * limit;
 
-    const queryBuilder = this.createQueryBuilder('user').leftJoinAndSelect(
-      'user.cars',
-      'car',
-    );
+    const queryBuilder = this.createQueryBuilder('user')
+      .leftJoinAndSelect('user.cars', 'car')
+      .leftJoinAndSelect('user.roles', 'role');
 
     if (query.search) {
-      queryBuilder.where('"userName" IN(:...search)', {
-        search: query.search.split(','),
-      });
+      const searchTerms = query.search.split(',').map((term) => term.trim());
+
+      const lowerCaseSearchTerms = searchTerms.map((term) =>
+        term.toLowerCase(),
+      );
+
+      queryBuilder
+        .andWhere('LOWER("name") IN (:...search)', {
+          search: lowerCaseSearchTerms,
+        })
+        .orWhere('LOWER("brand") IN (:...search)', {
+          search: lowerCaseSearchTerms,
+        })
+        .orWhere('LOWER("model") IN (:...search)', {
+          search: lowerCaseSearchTerms,
+        })
+        .orWhere('LOWER("status") IN (:...search)', {
+          search: lowerCaseSearchTerms,
+        });
     }
 
     if (query.class) {
@@ -63,43 +72,5 @@ export class UserRepository extends Repository<User> {
       countItem: count,
       entities,
     };
-  }
-
-  async createUser(data: CreateUserRequestDto) {
-    const findUser = await this.findOne({
-      where: {
-        email: data.email,
-      },
-    });
-
-    if (findUser) {
-      throw new HttpException(
-        `User with this ${data.email} already exists!`,
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
-    data.password = await this.getHash(data.password);
-
-    const newUser = this.create(data);
-    await this.save(newUser);
-
-    const token = await this.signIn(newUser);
-
-    return { token };
-  }
-
-  async getHash(password: string) {
-    return await bcrypt.hash(password, 7);
-  }
-
-  async signIn(user) {
-    return await this.authService.signIn({
-      id: user.id.toString(),
-    });
-  }
-
-  async compareHash(password: string, hash: string): Promise<boolean> {
-    return bcrypt.compare(password, hash);
   }
 }
