@@ -4,8 +4,8 @@ import {
   PrimaryGeneratedColumn,
   ManyToOne,
   CreateDateColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+  UpdateDateColumn, OneToOne
+} from "typeorm";
 import { BodyTypeEnum } from './models/enums/body-type.enum';
 import { StatusCarEnum } from './models/enums/status.enum';
 import { CurrencyEnum } from './models/enums/currency.enum';
@@ -85,7 +85,7 @@ export class Car {
   @ApiProperty({ example: 'Kyiv', description: 'The region of the car' })
   region: string;
 
-  @Column({ type: 'varchar', nullable: false })
+  @Column({ type: 'varchar', nullable: true })
   @ApiProperty({
     example: 'This Audi A3 is a compact luxury sedan manufactured...',
     description: 'Detailed description of the car',
@@ -97,6 +97,9 @@ export class Car {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @OneToOne(() => User, (entity) => entity.car)
+  userBasic: User;
 
   @ManyToOne(() => User, (entity) => entity.cars)
   user: User;

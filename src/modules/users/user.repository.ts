@@ -1,7 +1,7 @@
 import { DataSource, Repository } from 'typeorm';
 import { User } from './user.entity';
 import { Injectable } from '@nestjs/common';
-import { PublicUserInfoDto } from '../../common/query/user.query.dto';
+import { PublicInfoDto } from '../../common/query/info.query.dto';
 
 @Injectable()
 export class UserRepository extends Repository<User> {
@@ -9,11 +9,11 @@ export class UserRepository extends Repository<User> {
     super(User, dataSource.manager);
   }
 
-  public async getAllUsers(query: PublicUserInfoDto) {
+  public async getAllUsers(query: PublicInfoDto) {
     query.order = query.order || 'ASC';
 
     const page = +query.page || 1;
-    const limit = +query.limit || 4;
+    const limit = +query.limit || 5;
     const offset = (page - 1) * limit;
 
     const queryBuilder = this.createQueryBuilder('user')
@@ -21,42 +21,18 @@ export class UserRepository extends Repository<User> {
       .leftJoinAndSelect('user.roles', 'role');
 
     if (query.search) {
-      const searchTerms = query.search.split(',').map((term) => term.trim());
-
-      const lowerCaseSearchTerms = searchTerms.map((term) =>
-        term.toLowerCase(),
-      );
-
-      queryBuilder
-        .andWhere('LOWER("name") IN (:...search)', {
-          search: lowerCaseSearchTerms,
-        })
-        .orWhere('LOWER("brand") IN (:...search)', {
-          search: lowerCaseSearchTerms,
-        })
-        .orWhere('LOWER("model") IN (:...search)', {
-          search: lowerCaseSearchTerms,
-        })
-        .orWhere('LOWER("status") IN (:...search)', {
-          search: lowerCaseSearchTerms,
-        });
-    }
-
-    if (query.class) {
-      queryBuilder.andWhere(`LOWER(ani.class) LIKE '%:class%'`, {
-        class: query.class.toLowerCase(),
-      });
+      this.applySearch(query, queryBuilder);
     }
 
     switch (query.sort) {
       case 'userName':
         queryBuilder.orderBy('user.name', query.order);
         break;
+      case 'roleUser':
+        queryBuilder.orderBy('role.userId', query.order);
+        break;
       case 'carBrand':
         queryBuilder.orderBy('car.brand', query.order);
-        break;
-      case 'carModel':
-        queryBuilder.orderBy('car.model', query.order);
         break;
       default:
         queryBuilder.orderBy('user.id', query.order);
@@ -72,5 +48,22 @@ export class UserRepository extends Repository<User> {
       countItem: count,
       entities,
     };
+  }
+
+  public applySearch(query: PublicInfoDto, queryBuilder) {
+    const searchTerms = query.search.split(',').map((term) => term.trim());
+
+    const lowerCaseSearchTerms = searchTerms.map((term) => term.toLowerCase());
+
+    return queryBuilder
+      .andWhere('LOWER("name") IN (:...search)', {
+        search: lowerCaseSearchTerms,
+      })
+      .orWhere('LOWER("brand") IN (:...search)', {
+        search: lowerCaseSearchTerms,
+      })
+      .orWhere('LOWER("model") IN (:...search)', {
+        search: lowerCaseSearchTerms,
+      });
   }
 }

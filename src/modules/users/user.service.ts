@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRedisClient, RedisClient } from '@webeleon/nestjs-redis';
-import { PublicUserInfoDto } from '../../common/query/user.query.dto';
+import { PublicInfoDto } from '../../common/query/info.query.dto';
 import { PaginatedDto } from '../../common/pagination/response';
 import { PublicUserData } from './models/interface/user.response.dto';
 import { CreateUserRequestDto } from './models/dtos/request/create-user.request.dto';
@@ -11,27 +11,25 @@ import { RoleService } from '../roles/role.service';
 import { AddRoleDto } from './models/dtos/request/add-role.dto';
 import { BanUserDto } from './models/dtos/request/ban-user.dto';
 import * as bcrypt from 'bcrypt';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class UserService {
   constructor(
     private readonly userRepository: UserRepository,
     private readonly roleService: RoleService,
-    // private readonly jwtService: JwtService,
+    private readonly jwtService: JwtService,
     @InjectRedisClient() readonly redisClient: RedisClient,
   ) {}
 
   async getAllUsers(
-    query: PublicUserInfoDto,
+    query: PublicInfoDto,
   ): Promise<PaginatedDto<PublicUserData>> {
     return await this.userRepository.getAllUsers(query);
   }
 
-  async getUserById(userId: string): Promise<PublicUserData> {
-    const findUser = await this.userRepository.findOne({
-      where: { id: +userId },
-      relations: { cars: true, roles: true },
-    });
+  async getUserById(userId: number): Promise<PublicUserData> {
+    const findUser = await this.findUserById({ id: userId });
 
     if (!findUser) {
       throw new HttpException('User not found', HttpStatus.NOT_FOUND);
@@ -41,7 +39,7 @@ export class UserService {
   }
 
   async createUser(data: CreateUserRequestDto): Promise<User> {
-    const user = await this.findUser(data);
+    const user = await this.findUserByEmail(data);
 
     if (user) {
       throw new HttpException(
@@ -49,11 +47,13 @@ export class UserService {
         HttpStatus.BAD_REQUEST,
       );
     }
+    const hashPassword = this.jwtService.sign(data.password);
 
     const role = await this.roleService.getRoleByValue('MANAGER');
 
     const createdUser = this.userRepository.create({
       ...data,
+      password: hashPassword,
       roles: [role],
     });
 
@@ -61,10 +61,10 @@ export class UserService {
   }
 
   async updateUserById(
-    userId: string,
+    userId: number,
     data: UpdateUserRequestDto,
   ): Promise<User> {
-    const user = await this.userRepository.findOne({ where: { id: +userId } });
+    const user = await this.findUserById({ id: userId });
 
     if (!user) {
       throw new HttpException('User not found', HttpStatus.NOT_FOUND);
@@ -85,10 +85,8 @@ export class UserService {
     return await this.userRepository.save(user);
   }
 
-  async deleteUser(userId: string): Promise<void> {
-    const user = await this.userRepository.findOne({
-      where: { id: +userId },
-    });
+  async deleteUser(userId: number): Promise<void> {
+    const user = await this.findUserById({ id: userId });
 
     if (!user) {
       throw new HttpException('User not found', HttpStatus.NOT_FOUND);
@@ -113,9 +111,8 @@ export class UserService {
   }
 
   async ban(data: BanUserDto) {
-    const user = await this.userRepository.findOne({
-      where: { id: +data.userId },
-    });
+    const user = await this.findUserById({ id: data.userId });
+
     if (!user) {
       throw new HttpException('User not found', HttpStatus.NOT_FOUND);
     }
@@ -125,12 +122,21 @@ export class UserService {
     return user;
   }
 
-  async findUser(data) {
+  async findUserByEmail(data) {
     return await this.userRepository.findOne({
       where: {
         email: data.email,
       },
-      relations: { roles: true, cars: true },
+      relations: { roles: true, cars: true, posts: true },
+    });
+  }
+
+  async findUserById(data) {
+    return await this.userRepository.findOne({
+      where: {
+        id: data.id,
+      },
+      relations: { roles: true, cars: true, posts: true },
     });
   }
 }

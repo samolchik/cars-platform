@@ -29,7 +29,7 @@ export class AuthService {
   ) {}
 
   async register(data: CreateUserRequestDto): Promise<LoginResponseDto> {
-    const findUser = await this.userService.findUser(data);
+    const findUser = await this.userService.findUserByEmail(data);
 
     if (findUser) {
       throw new HttpException(
@@ -40,7 +40,7 @@ export class AuthService {
 
     const hashPassword = await this.getHash(data.password);
 
-    const role = await this.roleService.getRoleByValue('MANAGER');
+    const role = await this.roleService.getRoleByValue('BUYER');
 
     const createdUser = this.userRepository.create({
       ...data,
@@ -48,11 +48,7 @@ export class AuthService {
       roles: [role],
     });
 
-    const newUser = await this.userRepository.save(createdUser)
-    // const newUser = await this.userService.createUser({
-    //   ...data,
-    //   password: hashPassword,
-    // });
+    const newUser = await this.userRepository.save(createdUser);
 
     const tokenResponse = await this.generateToken(newUser);
     const token = tokenResponse.token;
@@ -62,7 +58,7 @@ export class AuthService {
   }
 
   async login(data: UserLoginDto): Promise<LoginResponseDto> {
-    const findUser = await this.userService.findUser(data);
+    const findUser = await this.userService.findUserByEmail(data);
 
     if (!findUser) {
       throw new HttpException(

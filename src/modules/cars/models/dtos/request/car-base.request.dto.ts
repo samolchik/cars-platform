@@ -3,7 +3,6 @@ import { IsBoolean, IsEnum, IsNotEmpty, IsNumber, IsString, Max, Min } from "cla
 import { StatusCarEnum } from '../../enums/status.enum';
 import { CurrencyEnum } from '../../enums/currency.enum';
 import { BodyTypeEnum } from '../../enums/body-type.enum';
-import { Column } from "typeorm";
 
 export class CarBaseRequestDto {
   @ApiProperty({ example: 'Audi', description: 'The brand of the car' })

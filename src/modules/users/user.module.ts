@@ -10,8 +10,8 @@ import { Role } from '../roles/role.entity';
 import { RoleModule } from '../roles/role.module';
 import { Car } from '../cars/car.entity';
 import { CarModule } from '../cars/car.module';
-import { Post } from "../posts/post.entity";
-import { PostModule } from "../posts/post.module";
+import { Post } from '../posts/post.entity';
+import { PostModule } from '../posts/post.module';
 
 @Module({
   imports: [
@@ -20,12 +20,12 @@ import { PostModule } from "../posts/post.module";
       url: process.env.REDIS_PORT,
     }),
     RoleModule,
-    CarModule,
-    PostModule,
     forwardRef(() => AuthModule),
+    forwardRef(() => CarModule),
+    forwardRef(() => PostModule),
   ],
   providers: [UserService, UserRepository],
   controllers: [UserController],
-  exports: [UserService],
+  exports: [UserService, UserRepository],
 })
 export class UserModule {}

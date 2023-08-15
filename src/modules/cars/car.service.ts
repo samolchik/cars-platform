@@ -5,6 +5,10 @@ import { Car } from './car.entity';
 import { User } from '../users/user.entity';
 import { CreateCarRequestDto } from './models/dtos/request/create-car.request.dto';
 import { UpdateCarRequestDto } from './models/dtos/request/update-car.request.dto';
+import { PaginatedDto } from '../../common/pagination/response';
+import { PublicCarData } from './models/interface/car.response.dto';
+import { PublicInfoDto } from '../../common/query/info.query.dto';
+import { AccountType } from '../users/models/enums';
 
 @Injectable()
 export class CarService {
@@ -15,16 +19,88 @@ export class CarService {
     private readonly userRepository: Repository<User>,
   ) {}
 
+  async getAllCars(query: PublicInfoDto): Promise<PaginatedDto<PublicCarData>> {
+    query.order = query.order || 'ASC';
+
+    const page = +query.page || 1;
+    const limit = +query.limit || 10;
+    const offset = (page - 1) * limit;
+
+    const queryBuilder = this.carRepository
+      .createQueryBuilder('cars')
+      .leftJoinAndSelect('cars.user', 'user');
+
+    if (query.search) {
+      const searchTerm = query.search.split(',').map((term) => term.trim());
+
+      const lowerCaseSearchTerms = searchTerm.map((term) => term.toLowerCase());
+
+      queryBuilder
+        .andWhere('LOWER("name") IN (:...search)', {
+          search: lowerCaseSearchTerms,
+        })
+        .orWhere('LOWER("brand") IN (:...search)', {
+          search: lowerCaseSearchTerms,
+        })
+        .orWhere('LOWER("model") IN (:...search)', {
+          search: lowerCaseSearchTerms,
+        })
+        .orWhere('LOWER("status") IN (:...search)', {
+          search: lowerCaseSearchTerms,
+        });
+    }
+
+    // if (query.class) {
+    //   queryBuilder.andWhere(`LOWER(ani.class) LIKE '%:class%'`, {
+    //     class: query.class.toLowerCase(),
+    //   });
+    // }
+
+    switch (query.sort) {
+      case 'userName':
+        queryBuilder.orderBy('user.name', query.order);
+        break;
+      case 'carBrand':
+        queryBuilder.orderBy('car.brand', query.order);
+        break;
+      case 'carModel':
+        queryBuilder.orderBy('car.model', query.order);
+        break;
+      default:
+        queryBuilder.orderBy('car.id', query.order);
+    }
+
+    queryBuilder.limit(limit);
+    queryBuilder.offset(offset);
+    const [entities, count] = await queryBuilder.getManyAndCount();
+
+    return {
+      page,
+      pages: Math.ceil(count / limit),
+      countItem: count,
+      entities,
+    };
+  }
+
   async createCar(data: CreateCarRequestDto, userId: number): Promise<Car> {
     const user = await this.userRepository.findOne({ where: { id: userId } });
-
+    console.log(user);
     if (!user) {
       throw new HttpException('User not found', HttpStatus.NOT_FOUND);
     }
 
-    const newCar = this.carRepository.create({ ...data, user });
+    const car = this.carRepository.create({ ...data });
 
-    return await this.carRepository.save(newCar);
+
+
+
+    if (user.accountType === AccountType.BASIC) {
+      car.userBasic = user;
+    } else if (user.accountType === AccountType.PREMIUM) {
+      car.user = user;
+    }
+
+    return await this.carRepository.save(car);
   }
 
   async updateCarProfile(

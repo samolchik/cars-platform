@@ -30,7 +30,7 @@ export class BearerStrategy extends PassportStrategy(Strategy, 'bearer') {
       }
       await this.authService.verify(token);
       const decodeToken: any = this.authService.decode(token);
-      user = await this.userService.findUser(decodeToken);
+      user = await this.userService.findUserByEmail(decodeToken);
     } catch (e) {
       console.log(
         new Date().toISOString(),

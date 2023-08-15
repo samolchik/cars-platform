@@ -8,7 +8,7 @@ export class Post {
   @ApiProperty({ example: 1, description: 'The ID of the post' })
   id: number;
 
-  @Column({ unique: true, nullable: false })
+  @Column({ nullable: false })
   @ApiProperty({ example: 'Title', description: 'The title of the post' })
   title: string;
 
@@ -22,10 +22,6 @@ export class Post {
     description: 'The URL of the image associated with the post',
   })
   image: string;
-
-  @ApiProperty({ example: 1, description: 'The ID of the user' })
-  @Column({ type: 'integer' })
-  userId: number;
 
   @ManyToOne(() => User, (entity) => entity.posts)
   author: User;

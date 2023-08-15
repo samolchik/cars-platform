@@ -1,11 +1,19 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsOptional, IsString } from 'class-validator';
 
-export class PublicUserInfoDto {
+export class PublicInfoDto {
   @ApiProperty()
   @IsString()
   @IsOptional()
-  @IsEnum(['userName', 'modelCar', 'brandCar'])
+  @IsEnum([
+    'userName',
+    'roleUser',
+    'modelCar',
+    'brandCar',
+    'ageCar',
+    'regionCar',
+    'statusCar',
+  ])
   sort: string;
 
   @ApiProperty()

@@ -5,6 +5,7 @@ import {
   Get,
   HttpStatus,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
   Query,
@@ -26,10 +27,10 @@ import {
   PaginatedDto,
 } from '../../common/pagination/response';
 import { PublicUserData } from './models/interface/user.response.dto';
-import { PublicUserInfoDto } from '../../common/query/user.query.dto';
+import { PublicInfoDto } from '../../common/query/info.query.dto';
 import { CreateUserRequestDto } from './models/dtos/request/create-user.request.dto';
 import { UpdateUserRequestDto } from './models/dtos/request/update-user.request.dto';
-import { RolesGuard } from '../../common/guards/roles.guard';
+import { RolesGuard } from '../auth/models/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { AddRoleDto } from './models/dtos/request/add-role.dto';
 import { BanUserDto } from './models/dtos/request/ban-user.dto';
@@ -52,13 +53,13 @@ export class UserController {
     type: PaginatedDto,
   })
   @Get('list')
-  async getUserList(@Query() query: PublicUserInfoDto) {
+  async getUserList(@Query() query: PublicInfoDto) {
     return await this.userService.getAllUsers(query);
   }
 
   @ApiBearerAuth()
-  @Roles('ADMIN')
-  @UseGuards(RolesGuard)
+  // @Roles('ADMIN')
+  // @UseGuards(RolesGuard)
   @ApiOperation({ summary: 'Create new user' })
   @ApiResponse({
     status: HttpStatus.CREATED,
@@ -71,6 +72,7 @@ export class UserController {
   }
 
   @ApiBearerAuth()
+  @UseGuards(AuthGuard())
   @ApiOperation({ summary: 'Get user by id' })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -79,7 +81,7 @@ export class UserController {
   })
   @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'User not found' })
   @Get(':userId')
-  async getUserById(@Param('userId') userId: string) {
+  async getUserById(@Param('userId', ParseIntPipe) userId: number) {
     return await this.userService.getUserById(userId);
   }
 
@@ -93,21 +95,22 @@ export class UserController {
   })
   @Patch(':userId')
   async updateUser(
-    @Param('userId') userId: string,
+    @Param('userId', ParseIntPipe) userId: number,
     @Body() body: UpdateUserRequestDto,
   ) {
     return await this.userService.updateUserById(userId, body);
   }
 
   @ApiOperation({ summary: 'Delete user' })
-  @UseGuards(AuthGuard())
+  // @Roles('ADMIN')
+  // @UseGuards(RolesGuard)
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Delete user by ID',
   })
   @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'User not found' })
   @Delete(':userId')
-  async deleteUser(@Param('userId') userId: string) {
+  async deleteUser(@Param('userId', ParseIntPipe) userId: number) {
     await this.userService.deleteUser(userId);
     return {
       statusCode: HttpStatus.OK,
@@ -117,8 +120,8 @@ export class UserController {
 
   @ApiOperation({ summary: 'Add role' })
   @ApiResponse({ status: 200 })
-  @Roles('ADMIN')
-  @UseGuards(RolesGuard)
+  // @Roles('ADMIN')
+  // @UseGuards(RolesGuard)
   @Post('/role')
   addRole(@Body() data: AddRoleDto) {
     return this.userService.addRole(data);
@@ -126,8 +129,8 @@ export class UserController {
 
   @ApiOperation({ summary: 'Ban user' })
   @ApiResponse({ status: 200 })
-  @Roles('ADMIN')
-  @UseGuards(RolesGuard)
+  // @Roles('ADMIN', 'MANAGER')
+  // @UseGuards(RolesGuard)
   @Post('/ban')
   ban(@Body() data: BanUserDto) {
     return this.userService.ban(data);

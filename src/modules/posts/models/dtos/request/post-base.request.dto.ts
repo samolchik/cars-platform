@@ -1,13 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
-export class CreatePostDto {
+export class PostBaseRequestDto {
   @ApiProperty({
     example: 1,
     description: 'The ID of the user creating the post',
   })
   @IsNumber()
-  userId: number;
+  authorId: number;
 
   @ApiProperty({ example: 'Title', description: 'The title of the post' })
   @IsString()
@@ -18,4 +18,12 @@ export class CreatePostDto {
   @IsString()
   @IsNotEmpty()
   content: string;
+
+  @ApiProperty({
+    example: 'Image-url',
+    description: 'The URL of the image associated with the post',
+  })
+  @IsString()
+  @IsNotEmpty()
+  image: string;
 }

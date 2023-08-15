@@ -7,11 +7,12 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   ManyToMany,
+  OneToOne,
 } from 'typeorm';
 import { AccountType } from './models/enums';
 import { Car } from '../cars/car.entity';
 import { Role } from '../roles/role.entity';
-import { Post } from "../posts/post.entity";
+import { Post } from '../posts/post.entity';
 
 @Entity()
 export class User {
@@ -36,7 +37,7 @@ export class User {
   banned: boolean;
 
   @ApiProperty({ example: 'Inappropriate behavior', description: 'Ban reason' })
-  @Column({ type: 'varchar', nullable: true })
+  @Column({ type: 'varchar' })
   banReason: string;
 
   @ApiProperty({
@@ -51,21 +52,34 @@ export class User {
   })
   accountType: AccountType;
 
-  @ApiProperty({ example: '2023-07-05T10:00:00Z', description: 'User creation date' })
+  @ApiProperty({
+    example: '2023-07-05T10:00:00Z',
+    description: 'User creation date',
+  })
   @CreateDateColumn()
   createdAt: Date;
 
-  @ApiProperty({ example: '2023-07-05T15:30:00Z', description: 'User last update date' })
+  @ApiProperty({
+    example: '2023-07-05T15:30:00Z',
+    description: 'User last update date',
+  })
   @UpdateDateColumn()
   updatedAt: Date;
 
   @ApiProperty({
     type: Car,
     isArray: true,
-    description: 'List of user cars',
+    description: '"Premium" account, List of user cars',
   })
   @OneToMany(() => Car, (entity) => entity.user, { cascade: true })
   cars: Car[];
+
+  @ApiProperty({
+    type: Car,
+    description: '"Basic" account, seller can put only one car for sale.',
+  })
+  @OneToOne(() => Car, (entity) => entity.userBasic, { cascade: true })
+  car: Car[];
 
   @ApiProperty({
     type: Post,

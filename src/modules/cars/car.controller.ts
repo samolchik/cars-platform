@@ -9,16 +9,44 @@ import {
   Patch,
   Post,
   Put,
+  Query,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { CarService } from './car.service';
 import { CreateCarRequestDto } from './models/dtos/request/create-car.request.dto';
 import { UpdateCarRequestDto } from './models/dtos/request/update-car.request.dto';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { RolesGuard } from '../auth/models/guards/roles.guard';
+import {
+  ApiPaginatedResponse,
+  PaginatedDto,
+} from '../../common/pagination/response';
+import { PublicInfoDto } from '../../common/query/info.query.dto';
+import { PublicCarData } from './models/interface/car.response.dto';
 
 @ApiTags('Cars')
 @Controller('cars')
 export class CarController {
   constructor(private readonly carService: CarService) {}
+
+  @ApiOperation({ summary: 'Get all cars' })
+  @ApiBearerAuth()
+  @ApiPaginatedResponse('entities', PublicCarData)
+  @ApiResponse({
+    description: 'Get all cars with pagination',
+    status: HttpStatus.OK,
+    type: PaginatedDto,
+  })
+  @Get()
+  async getUserList(@Query() query: PublicInfoDto) {
+    return await this.carService.getAllCars(query);
+  }
 
   @ApiOperation({ summary: 'Create new car' })
   @Post(':userId')

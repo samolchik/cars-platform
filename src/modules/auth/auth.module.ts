@@ -10,6 +10,7 @@ import { RoleModule } from '../roles/role.module';
 import { UserModule } from '../users/user.module';
 import { Role } from '../roles/role.entity';
 import { AuthController } from './auth.controller';
+import { RolesGuard } from "./models/guards/roles.guard";
 @Module({
   imports: [
     PassportModule.register({
