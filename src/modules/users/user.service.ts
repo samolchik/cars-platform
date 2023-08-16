@@ -9,7 +9,6 @@ import { User } from './user.entity';
 import { UserRepository } from './user.repository';
 import { RoleService } from '../roles/role.service';
 import { AddRoleDto } from './models/dtos/request/add-role.dto';
-import { BanUserDto } from './models/dtos/request/ban-user.dto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 
@@ -110,14 +109,13 @@ export class UserService {
     throw new HttpException('User or role not found', HttpStatus.NOT_FOUND);
   }
 
-  async ban(data: BanUserDto) {
-    const user = await this.findUserById({ id: data.userId });
+  async ban(userId: number) {
+    const user = await this.findUserById({ id: userId });
 
     if (!user) {
       throw new HttpException('User not found', HttpStatus.NOT_FOUND);
     }
     user.banned = true;
-    user.banReason = data.banReason;
     await this.userRepository.save(user);
     return user;
   }

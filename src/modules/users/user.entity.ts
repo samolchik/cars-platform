@@ -7,7 +7,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   ManyToMany,
-  OneToOne,
+  // OneToOne,
 } from 'typeorm';
 import { AccountType } from './models/enums';
 import { Car } from '../cars/car.entity';
@@ -36,12 +36,8 @@ export class User {
   @Column({ type: 'boolean', default: false })
   banned: boolean;
 
-  @ApiProperty({ example: 'Inappropriate behavior', description: 'Ban reason' })
-  @Column({ type: 'varchar' })
-  banReason: string;
-
   @ApiProperty({
-    example: AccountType.BASIC,
+    example: AccountType,
     description: 'User account type',
     enum: AccountType,
   })
@@ -50,7 +46,7 @@ export class User {
     enum: AccountType,
     default: AccountType.BASIC,
   })
-  accountType: AccountType;
+  accountType: AccountType.BASIC;
 
   @ApiProperty({
     example: '2023-07-05T10:00:00Z',
@@ -74,12 +70,12 @@ export class User {
   @OneToMany(() => Car, (entity) => entity.user, { cascade: true })
   cars: Car[];
 
-  @ApiProperty({
-    type: Car,
-    description: '"Basic" account, seller can put only one car for sale.',
-  })
-  @OneToOne(() => Car, (entity) => entity.userBasic, { cascade: true })
-  car: Car[];
+  // @ApiProperty({
+  //   type: Car,
+  //   description: '"Basic" account, seller can put only one car for sale.',
+  // })
+  // @OneToOne(() => Car, (entity) => entity.userBasic)
+  // car: Car;
 
   @ApiProperty({
     type: Post,

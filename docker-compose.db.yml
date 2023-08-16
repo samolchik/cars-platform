@@ -1,16 +1,17 @@
 version: '3.9'
 
 services:
-  cars-platform-postgres:
+  cars-postgres:
     image: postgis/postgis
     ports:
       - '${POSTGRES_EXTERNAL_PORT:-5432}:5432'
     environment:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: pass
-      POSTGRES_DB: cars-platform
+      POSTGRES_DB: cars
     volumes:
-      - cars-platform-db:/var/lib/postgresql/cars-platform
+      - cars-db:/var/lib/postgresql/cars
+
 
   cars-platform_redis:
     image: redis
@@ -21,4 +22,4 @@ services:
     restart: always
 
 volumes:
-  cars-platform-db:
+  cars-db:

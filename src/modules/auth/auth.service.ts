@@ -85,10 +85,10 @@ export class AuthService {
     );
   }
 
-  async generateToken(data: User): Promise<LoginResponseDto> {
+  async generateToken(data): Promise<LoginResponseDto> {
     const payload = { email: data.email, id: data.id, roles: data.roles };
     return {
-      token: this.jwtService.sign(payload),
+      token: this.jwtService.sign(payload, { expiresIn: 3600 }),
     };
   }
 

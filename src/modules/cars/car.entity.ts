@@ -98,8 +98,8 @@ export class Car {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @OneToOne(() => User, (entity) => entity.car)
-  userBasic: User;
+  // @OneToOne(() => User, (entity) => entity.car)
+  // userBasic: User;
 
   @ManyToOne(() => User, (entity) => entity.cars)
   user: User;

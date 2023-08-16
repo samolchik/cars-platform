@@ -8,7 +8,7 @@ import { UpdateCarRequestDto } from './models/dtos/request/update-car.request.dt
 import { PaginatedDto } from '../../common/pagination/response';
 import { PublicCarData } from './models/interface/car.response.dto';
 import { PublicInfoDto } from '../../common/query/info.query.dto';
-import { AccountType } from '../users/models/enums';
+import { AccountType } from '../users/models/enums/account-type.enum';
 
 @Injectable()
 export class CarService {
@@ -27,8 +27,8 @@ export class CarService {
     const offset = (page - 1) * limit;
 
     const queryBuilder = this.carRepository
-      .createQueryBuilder('cars')
-      .leftJoinAndSelect('cars.user', 'user');
+      .createQueryBuilder('car')
+      .leftJoinAndSelect('car.user', 'user');
 
     if (query.search) {
       const searchTerm = query.search.split(',').map((term) => term.trim());
@@ -43,9 +43,6 @@ export class CarService {
           search: lowerCaseSearchTerms,
         })
         .orWhere('LOWER("model") IN (:...search)', {
-          search: lowerCaseSearchTerms,
-        })
-        .orWhere('LOWER("status") IN (:...search)', {
           search: lowerCaseSearchTerms,
         });
     }
@@ -83,29 +80,44 @@ export class CarService {
   }
 
   async createCar(data: CreateCarRequestDto, userId: number): Promise<Car> {
-    const user = await this.userRepository.findOne({ where: { id: userId } });
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: { cars: true },
+    });
     console.log(user);
     if (!user) {
       throw new HttpException('User not found', HttpStatus.NOT_FOUND);
     }
 
-    const car = this.carRepository.create({ ...data });
-
-
-
-
     if (user.accountType === AccountType.BASIC) {
-      car.userBasic = user;
+      if (user.cars.length <= 1) {
+        throw new HttpException(
+          'User can have only one car in basic account',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      const car = this.carRepository.create({
+        ...data,
+        user,
+      })
+
+      return await this.carRepository.save(car);
     } else if (user.accountType === AccountType.PREMIUM) {
-      car.user = user;
+      const car = this.carRepository.create({
+        ...data,
+        user,
+      });
+
+      return await this.carRepository.save(car);
     }
 
-    return await this.carRepository.save(car);
+    throw new HttpException('Invalid account type', HttpStatus.BAD_REQUEST);
   }
 
   async updateCarProfile(
     carId: number,
-    data: UpdateCarRequestDto,
+    data: UpdateCarRequestDto
   ): Promise<UpdateCarRequestDto> {
     const findCar = await this.findCarById(carId);
 

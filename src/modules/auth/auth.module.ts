@@ -1,4 +1,4 @@
-import { forwardRef, Module } from "@nestjs/common";
+import { forwardRef, Module } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -10,7 +10,7 @@ import { RoleModule } from '../roles/role.module';
 import { UserModule } from '../users/user.module';
 import { Role } from '../roles/role.entity';
 import { AuthController } from './auth.controller';
-import { RolesGuard } from "./models/guards/roles.guard";
+
 @Module({
   imports: [
     PassportModule.register({

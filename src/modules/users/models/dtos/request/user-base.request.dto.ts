@@ -9,6 +9,7 @@ import {
   Matches,
 } from 'class-validator';
 import { AccountType } from '../../enums';
+import { Match } from '../../../../../common/decorators/password.match';
 
 export class UserBaseRequestDto {
   @ApiProperty({
@@ -46,16 +47,19 @@ export class UserBaseRequestDto {
   @IsString()
   @IsEmail({}, { message: 'Email is not correct' })
   @IsNotEmpty()
+  @Matches(
+    /^([\w\-\.]+)@((\[([0-9]{1,3}\.){3}[0-9]{1,3}\])|(([\w\-]+\.)+)([a-zA-Z]{2,4}))$/,
+  )
   email: string;
-
-  @ApiProperty({
-    example: 'USER',
-    description: 'Account type',
-    enum: AccountType,
-  })
-  @IsEnum(AccountType)
-  @IsNotEmpty()
-  accountType: AccountType;
+  //
+  // @ApiProperty({
+  //   example: 'USER',
+  //   description: 'Account type',
+  //   enum: AccountType,
+  // })
+  // @IsEnum(AccountType)
+  // @IsNotEmpty()
+  // accountType: AccountType.PREMIUM;
 
   @ApiProperty({
     example: true,
@@ -74,14 +78,4 @@ export class UserBaseRequestDto {
   @IsBoolean()
   @IsOptional()
   banned: boolean;
-
-  @ApiProperty({
-    example: 'Inappropriate behavior',
-    description: 'Ban reason',
-    pattern: '^[a-zA-Z]\\w{1,19}$',
-    minLength: 1,
-    maxLength: 100,
-  })
-  @IsString()
-  banReason: string;
 }

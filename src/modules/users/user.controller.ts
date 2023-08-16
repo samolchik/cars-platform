@@ -33,7 +33,6 @@ import { UpdateUserRequestDto } from './models/dtos/request/update-user.request.
 import { RolesGuard } from '../auth/models/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { AddRoleDto } from './models/dtos/request/add-role.dto';
-import { BanUserDto } from './models/dtos/request/ban-user.dto';
 import { User } from './user.entity';
 
 @ApiTags('Users')
@@ -45,7 +44,7 @@ export class UserController {
   @ApiOperation({ summary: 'Get all users' })
   @ApiBearerAuth()
   @Roles('ADMIN')
-  @UseGuards(RolesGuard)
+  @UseGuards(AuthGuard(), RolesGuard)
   @ApiPaginatedResponse('entities', PublicUserData)
   @ApiResponse({
     description: 'Get all users with pagination',
@@ -58,8 +57,8 @@ export class UserController {
   }
 
   @ApiBearerAuth()
-  // @Roles('ADMIN')
-  // @UseGuards(RolesGuard)
+  @Roles('ADMIN')
+  @UseGuards(AuthGuard(), RolesGuard)
   @ApiOperation({ summary: 'Create new user' })
   @ApiResponse({
     status: HttpStatus.CREATED,
@@ -102,8 +101,8 @@ export class UserController {
   }
 
   @ApiOperation({ summary: 'Delete user' })
-  // @Roles('ADMIN')
-  // @UseGuards(RolesGuard)
+  @Roles('ADMIN')
+  @UseGuards(RolesGuard)
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Delete user by ID',
@@ -120,8 +119,8 @@ export class UserController {
 
   @ApiOperation({ summary: 'Add role' })
   @ApiResponse({ status: 200 })
-  // @Roles('ADMIN')
-  // @UseGuards(RolesGuard)
+  @Roles('ADMIN')
+  @UseGuards(RolesGuard)
   @Post('/role')
   addRole(@Body() data: AddRoleDto) {
     return this.userService.addRole(data);
@@ -129,10 +128,10 @@ export class UserController {
 
   @ApiOperation({ summary: 'Ban user' })
   @ApiResponse({ status: 200 })
-  // @Roles('ADMIN', 'MANAGER')
-  // @UseGuards(RolesGuard)
-  @Post('/ban')
-  ban(@Body() data: BanUserDto) {
-    return this.userService.ban(data);
+  @Roles('ADMIN', 'MANAGER')
+  @UseGuards(RolesGuard)
+  @Post(':userId/ban')
+  ban(@Param('userId', ParseIntPipe) userId: number): Promise<User> {
+    return this.userService.ban(userId);
   }
 }

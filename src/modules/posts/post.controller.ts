@@ -1,20 +1,25 @@
 import {
   Body,
   Controller,
-  Delete, Get,
+  Delete,
+  Get,
   HttpStatus,
   Param,
   ParseIntPipe,
   Patch,
   Post,
   UploadedFile,
-  UseInterceptors
-} from "@nestjs/common";
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
 
 import { FileInterceptor } from '@nestjs/platform-express';
 import { PostService } from './post.service';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CreatePostRequestDto } from './models/dtos/request/create-post.request.dto';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { PostResponseDto } from './models/dtos/response/post-response.dto';
+import { RolesGuard } from '../auth/models/guards/roles.guard';
 
 @ApiTags('Posts')
 @Controller('posts')
@@ -29,22 +34,31 @@ export class PostController {
   }
 
   @ApiOperation({ summary: 'Create post' })
+  @Roles('ADMIN', 'MANAGER', 'SELLER')
+  @UseGuards(RolesGuard)
   @Post()
   @UseInterceptors(FileInterceptor('image'))
-  createPost(@Body() data: CreatePostRequestDto, @UploadedFile() image) {
+  createPost(
+    @Body() data: CreatePostRequestDto,
+    @UploadedFile() image,
+  ): Promise<PostResponseDto> {
     return this.postService.createPost(data, image);
   }
 
   @ApiOperation({ summary: 'Update post' })
+  @Roles('ADMIN', 'MANAGER', 'SELLER')
+  // @UseGuards(RolesGuard)
   @Patch(':postId')
   updatePost(
     @Param('postId', ParseIntPipe) postId: number,
     @Body() data: CreatePostRequestDto,
-  ) {
+  ): Promise<PostResponseDto> {
     return this.postService.updatePost(postId, data);
   }
 
   @ApiOperation({ summary: 'Delete post' })
+  @Roles('ADMIN', 'MANAGER')
+  @UseGuards(RolesGuard)
   @Delete(':postId')
   async deleteCar(@Param('postId', ParseIntPipe) postId: number) {
     await this.postService.deletePost(postId);

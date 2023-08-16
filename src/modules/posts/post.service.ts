@@ -6,7 +6,8 @@ import { FileService } from '../file/file.service';
 import { UpdatePostRequestDto } from './models/dtos/request/update-post.request.dto';
 import { CreatePostRequestDto } from './models/dtos/request/create-post.request.dto';
 import { User } from '../users/user.entity';
-import { UserService } from "../users/user.service";
+import { UserService } from '../users/user.service';
+import { PostResponseDto } from './models/dtos/response/post-response.dto';
 
 @Injectable()
 export class PostService {
@@ -22,7 +23,10 @@ export class PostService {
     return await this.postRepository.find(data);
   }
 
-  async createPost(data: CreatePostRequestDto, image: any) {
+  async createPost(
+    data: CreatePostRequestDto,
+    image: any,
+  ): Promise<PostResponseDto> {
     const fileName = await this.fileService.createFile(image);
     const author = await this.userService.findUserById({
       where: { id: data.authorId },
@@ -39,7 +43,10 @@ export class PostService {
     return await this.postRepository.save(post);
   }
 
-  async updatePost(postId: number, data: UpdatePostRequestDto): Promise<Post> {
+  async updatePost(
+    postId: number,
+    data: UpdatePostRequestDto,
+  ): Promise<PostResponseDto> {
     const findPost = await this.findPostById(postId);
 
     if (!findPost) {
